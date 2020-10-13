@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import capstone
 # pip3 install keystone-engine
 import keystone
@@ -141,10 +143,8 @@ def hex2b(ins):
 def disassemble_bytes(inb, arch, bits, synt=AP_SYNT_DEF, withbytes=False):
     cs = capstone.Cs(arch2cs[arch], bits2cs[bits])
     if synt != AP_SYNT_DEF:
-        print(synt)
         cs.syntax = synt2cs[synt]
     out = ""
-    print("DEBUG", inb.hex())
     for i in cs.disasm(inb, 0):
         if withbytes:
             out += i.bytes.hex() + ' '
@@ -167,7 +167,6 @@ def emulate(ins, arch, bits, synt=AP_SYNT_DEF):
     uc = unicorn.Uc(arch2uc[arch], bits2uc[bits])
     PGSZ = 0x1000
     roundup = (len(code) + (PGSZ-1)) & (~(PGSZ-1))
-    print(hex(roundup))
     uc.mem_map(addr, roundup)
     uc.mem_write(addr, code)
     
