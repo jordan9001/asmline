@@ -13,3 +13,10 @@ A similar tool is rasm2 provided with [radare2][4]
 [2]: https://github.com/keystone-engine/keystone
 [3]: https://github.com/unicorn-engine/unicorn
 [4]: https://github.com/radareorg/radare2
+
+
+### Dependencies
+The python3 libraries for capstone and keystone-engine must be installed. The python3 library for unicorn should be installed if you want the emulation mode.
+```
+pip3 install capstone keystone-engine unicorn
+```
