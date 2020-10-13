@@ -1,8 +1,15 @@
 # asmline
 interactive assembly / disassembly /  emulation
 
-A very small wrapper around [Capstone][1], [Keystone][2], and [Unicorn][3] Engines to make a interative tool for quickly testing some assembly
+---
+
+This tool is a very small wrapper around the [Capstone][1], [Keystone][2], and [Unicorn][3] Engines for quickly testing some assembly.
+
+It is a small commandline application to quickly turning bytes to assembly, assembly to bytes, or emulating a small piece of code. I often use it as a quick reference/tester when reverse engineering.
+
+A similar tool is rasm2 provided with [radare2][4]
 
 [1]: https://github.com/aquynh/capstone
 [2]: https://github.com/keystone-engine/keystone
 [3]: https://github.com/unicorn-engine/unicorn
+[4]: https://github.com/radareorg/radare2
