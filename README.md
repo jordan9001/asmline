@@ -1,4 +1,4 @@
-# asmplay
+# asmpline
 interactive assembly / disassembly /  emulation
 
 A very small wrapper around [Capstone][1], [Keystone][2], and [Unicorn][3] Engines to make a interative tool for quickly testing some assembly
