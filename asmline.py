@@ -157,18 +157,38 @@ def disassemble_hex(ins, arch, bits, synt=AP_SYNT_DEF):
     inb = hex2b(ins)
     return disassemble_bytes(inb, arch, bits, synt)
 
-def emulate(ins, arch, bits, synt=AP_SYNT_DEF):
+def emulate(ins, arch, bits, synt=AP_SYNT_DEF, allocstack=True):
     if not haveunicorn:
         raise Exception("Must have unicorn engine installed to use emulate feature")
 
     code = assemble(ins, arch, bits, synt)
 
-    addr = 0x0000
+    addr = 0x1000
     uc = unicorn.Uc(arch2uc[arch], bits2uc[bits])
     PGSZ = 0x1000
     roundup = (len(code) + (PGSZ-1)) & (~(PGSZ-1))
     uc.mem_map(addr, roundup)
     uc.mem_write(addr, code)
+
+    if allocstack:
+        stkaddr = 0xe000
+        spaddr = 0xf000
+        stksz = 0x2000
+        uc.mem_map(stkaddr, stksz)
+        sp = None
+        if arch == AP_ARCH_ARM:
+            sp = unicorn.arm_const.UC_ARM_REG_SP
+        elif arch == AP_ARCH_ARM64:
+            sp = unicorn.arm64_const.UC_ARM64_REG_SP
+        elif arch == AP_ARCH_X86 and bits == AP_BITS_64:
+            sp = unicorn.x86_const.UC_X86_REG_RSP
+        elif arch == AP_ARCH_X86 and bits == AP_BITS_32:
+            sp = unicorn.x86_const.UC_X86_REG_ESP
+        elif arch == AP_ARCH_X86 and bits == AP_BITS_16:
+            sp = unicorn.x86_const.UC_X86_REG_SP
+        else:
+            raise Exception("Stack allocation not supported for this arch")
+        uc.reg_write(sp, spaddr)
     
     try:
         uc.emu_start(addr, addr+len(code))
@@ -176,29 +196,42 @@ def emulate(ins, arch, bits, synt=AP_SYNT_DEF):
         print("Got Emulation error:", e)
 
     # dump state
-    #TODO pair this down to something smaller per arch
-    # we don't need all of this each time
+    # more / fewer registers? 
     rgmod = None
     prefix = ""
+    namelist = []
     if arch == AP_ARCH_ARM:
         prefix = "UC_ARM_REG_"
         rgmod = unicorn.arm_const
+        namelist = "r0 r1 r2 r3 r4 r5 r6 r7 r8 r9 r10 r11 r12 lr sp cpsr pc Q0 Q1".split()
     elif arch == AP_ARCH_ARM64:
         prefix = "UC_ARM64_REG_"
         rgmod = unicorn.arm64_const
-    elif arch == AP_ARCH_X86:
+        namelist = "x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 lr sp cpsr pc Q0 Q1".split()
+    elif arch == AP_ARCH_X86 and bits == AP_BITS_64:
         prefix = "UC_X86_REG_"
         rgmod = unicorn.x86_const
+        namelist = "rax rbx rcx rdx rsi rdi r8 r9 rsp rbp rip xmm0 xmm1".split()
+    elif arch == AP_ARCH_X86 and bits == AP_BITS_32:
+        prefix = "UC_X86_REG_"
+        rgmod = unicorn.x86_const
+        namelist = "eax ebx ecx edx esi edi esp ebp eip xmm0 xmm1".split()
+    elif arch == AP_ARCH_X86 and bits == AP_BITS_16:
+        prefix = "UC_X86_REG_"
+        rgmod = unicorn.x86_const
+        namelist = "ax bx cx dx si di sp bp ip".split()
+    else:
+        raise Exception("Unexpected arch")
 
-    for r in dir(rgmod):
-        if r.startswith(prefix):
-            rg = getattr(rgmod, r)
-            try:
-                rval = uc.reg_read(rg)
-            except unicorn.UcError:
-                continue
-            if isinstance(rval, int):
-                print(r[len(prefix):], '=', hex(rval))
+    for r in namelist:
+        rn = prefix + r.upper()
+        rg = getattr(rgmod, rn)
+        try:
+            rval = uc.reg_read(rg)
+        except unicorn.UcError:
+            continue
+        if isinstance(rval, int):
+            print(r, '=', hex(rval))
 
 def assemble(ins, arch, bits, synt=AP_SYNT_DEF):
     ks = keystone.Ks(arch2ks[arch], bits2ks[bits])
