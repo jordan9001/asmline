@@ -5,7 +5,7 @@ interactive assembly / disassembly /  emulation
 
 This tool is a very small wrapper around the [Capstone][1], [Keystone][2], and [Unicorn][3] Engines for quickly testing some assembly.
 
-It is a small commandline application to quickly turning bytes to assembly, assembly to bytes, or emulating a small piece of code. I often use it as a quick reference/tester when reverse engineering.
+It is a small commandline application for quickly turning bytes to assembly, assembly to bytes, or emulating a small piece of assembly. I often use it as a quick reference/tester when reverse engineering.
 
 A similar tool is rasm2 provided with [radare2][4]
 
